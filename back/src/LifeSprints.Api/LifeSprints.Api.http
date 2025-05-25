@@ -1,0 +1,6 @@
+@LifeSprints.Api_HostAddress = http://localhost:5089
+
+GET {{LifeSprints.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
