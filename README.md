@@ -21,12 +21,25 @@ Ironically using Kanban because I cannot dedicate consistent time each week.
 
 ### To Do
 
+- [ ] React Frontend - Design / Implement / Test / Deploy
 - [ ]
 
 ### In Progress
 
-- [ ] Database - docker-ized
+- [ ] APIs
+- [ ] Models
+- [ ] Data
 
 ### Done
 
 - [x] System Design - Rough
+- [x] Database - docker-ized
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
