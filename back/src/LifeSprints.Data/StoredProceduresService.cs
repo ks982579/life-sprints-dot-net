@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using LifeSprints.Models;
 using Npgsql;
-using NpgsqlTypes;
 using System.Data;
 using System.ComponentModel.DataAnnotations;
 
@@ -26,6 +24,24 @@ namespace LifeSprints.Data
         public int Priority { get; set; } = 0;
         public decimal? EstimatedHours { get; set; }
         public DateTime? DueDate { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for story summary (lightweight view)
+    /// </summary>
+    public class StoryDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public int Year { get; set; }
+        public bool IsCompleted { get; set; }
+        public int Priority { get; set; }
+        public decimal? EstimatedHours { get; set; }
+        public decimal? ActualHours { get; set; }
+        public DateTime? DueDate { get; set; }
+        public DateTime? CompletedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 
     /// <summary>
@@ -60,11 +76,10 @@ namespace LifeSprints.Data
     public interface IStoredProcedureService
     {
         Task<int> CreateStoryAsync(Guid userId, CreateStoryDto createStoryDto);
-
-        void ToggleStoryCompletionAsync();
-        void GetUserStoriesByYear();
-        void GetUserYearStats();
-        void CreateUser();
+        Task<bool> ToggleStoryCompletionAsync(int storyId, Guid? userId = null);
+        Task<List<StoryDto>> GetUserStoriesByYearAsync(Guid userId, int year);
+        Task<YearStatsDto> GetUserYearStatsAsync(Guid userId, int year);
+        Task<Guid> CreateUserAsync(CreateUserDto createUserDto);
     }
 
     public class StoredProcedureService : IStoredProcedureService
@@ -86,6 +101,9 @@ namespace LifeSprints.Data
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Create a new story using stored procedure
+        /// </summary>
         public async Task<int> CreateStoryAsync(Guid userId, CreateStoryDto createStoryDto)
         {
             using var connection = new NpgsqlConnection(this._connectionString);
@@ -105,21 +123,126 @@ namespace LifeSprints.Data
             var result = await command.ExecuteScalarAsync();
             return Convert.ToInt32(result);
         }
-        public void ToggleStoryCompletionAsync()
+
+
+        /// <summary>
+        /// Toggle story completion status
+        /// </summary>
+        public async Task<bool> ToggleStoryCompletionAsync(int storyId, Guid? userId = null)
         {
-            throw new NotImplementedException();
+            using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand(
+                "SELECT sp_toggle_story_completion(@p_story_id, @p_user_id)",
+                connection);
+
+            command.Parameters.AddWithValue("@p_story_id", storyId);
+            command.Parameters.AddWithValue("@p_user_id", (object?)userId ?? DBNull.Value);
+
+            var result = await command.ExecuteScalarAsync();
+            return Convert.ToBoolean(result);
         }
-        public void GetUserStoriesByYear()
+
+        /// <summary>
+        /// Get all stories for a user in a specific year
+        /// </summary>
+        public async Task<List<StoryDto>> GetUserStoriesByYearAsync(Guid userId, int year)
         {
-            throw new NotImplementedException();
+            using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand(
+                "SELECT * FROM sp_get_user_stories_by_year(@p_user_id, @p_year)",
+                connection);
+
+            command.Parameters.AddWithValue("@p_user_id", userId);
+            command.Parameters.AddWithValue("@p_year", year);
+
+            using var reader = await command.ExecuteReaderAsync();
+            var stories = new List<StoryDto>();
+
+            while (await reader.ReadAsync())
+            {
+                var story = new StoryDto
+                {
+                    Id = reader.GetInt32("story_id"),
+                    Title = reader.GetString("title"),
+                    Description = reader.IsDBNull("description") ? null : reader.GetString("description"),
+                    Year = reader.GetInt32("year"),
+                    IsCompleted = reader.GetBoolean("is_completed"),
+                    Priority = reader.GetInt32("priority"),
+                    EstimatedHours = reader.IsDBNull("estimated_hours") ? null : reader.GetDecimal("estimated_hours"),
+                    ActualHours = reader.IsDBNull("actual_hours") ? null : reader.GetDecimal("actual_hours"),
+                    DueDate = reader.IsDBNull("due_date") ? null : reader.GetDateTime("due_date"),
+                    CompletedAt = reader.IsDBNull("completed_at") ? null : reader.GetDateTime("completed_at"),
+                    CreatedAt = reader.GetDateTime("created_at")
+                };
+                stories.Add(story);
+            }
+
+            return stories;
         }
-        public void GetUserYearStats()
+
+        /// <summary>
+        /// Get completion statistics for a user's year
+        /// </summary>
+        public async Task<YearStatsDto> GetUserYearStatsAsync(Guid userId, int year)
         {
-            throw new NotImplementedException();
+            using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand(
+                "SELECT * FROM sp_get_user_year_stats(@p_user_id, @p_year)",
+                connection);
+
+            command.Parameters.AddWithValue("@p_user_id", userId);
+            command.Parameters.AddWithValue("@p_year", year);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new YearStatsDto
+                {
+                    Year = reader.GetInt32("year"),
+                    TotalStories = reader.GetInt64("total_stories"),
+                    CompletedStories = reader.GetInt64("completed_stories"),
+                    CompletionPercentage = reader.GetDecimal("completion_percentage"),
+                    TotalEstimatedHours = reader.GetDecimal("total_estimated_hours"),
+                    TotalActualHours = reader.GetDecimal("total_actual_hours")
+                };
+            }
+
+            // Return empty stats if no data found
+            return new YearStatsDto
+            {
+                Year = year,
+                TotalStories = 0,
+                CompletedStories = 0,
+                CompletionPercentage = 0,
+                TotalEstimatedHours = 0,
+                TotalActualHours = 0
+            };
         }
-        public void CreateUser()
+
+        /// <summary>
+        /// Create a new user
+        /// </summary>
+        public async Task<Guid> CreateUserAsync(CreateUserDto createUserDto)
         {
-            throw new NotImplementedException();
+            using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand(
+                "SELECT sp_create_user(@p_email, @p_display_name)",
+                connection);
+
+            command.Parameters.AddWithValue("@p_email", createUserDto.Email);
+            command.Parameters.AddWithValue("@p_display_name", createUserDto.DisplayName);
+
+            var result = await command.ExecuteScalarAsync();
+            return (Guid)result!;
         }
         #endregion
     }
