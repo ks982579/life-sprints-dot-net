@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LifeSprints.Models
 {
+    // TODO: Go to User.cs own file
     public class User
     {
         public Guid Id { get; set; }
@@ -18,6 +19,9 @@ namespace LifeSprints.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = true;
+
+        // navigation property
+        public virtual ICollection<Story> Stories { get; set; } = new List<Story>();
     }
 
     public class Story
@@ -49,6 +53,7 @@ namespace LifeSprints.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        // Navigation property
         [ForeignKey("UserId")]
         public virtual User User { get; set; } = null!;
     }
