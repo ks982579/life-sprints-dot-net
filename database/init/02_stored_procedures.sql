@@ -4,8 +4,8 @@
 CREATE OR REPLACE FUNCTION sp_create_story(
   p_user_id UUID,
   p_title VARCHAR(500),
-  p_description TEXT DEFAULT NULL,
   p_year INTEGER,
+  p_description TEXT DEFAULT NULL,
   p_priority INTEGER DEFAULT 0,
   p_estimated_hours DECIMAL(5,2) DEFAULT NULL,
   p_due_date DATE DEFAULT NULL

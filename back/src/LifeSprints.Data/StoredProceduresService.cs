@@ -110,12 +110,12 @@ namespace LifeSprints.Data
             await connection.OpenAsync();
 
             using var command = new NpgsqlCommand(
-                "SELECT sp_create_story(@p_user_id, @p_title, @p_description, @p_year, @p_priority, @p_estimated_hours, @p_due_date)",
+                "SELECT sp_create_story(@p_user_id, @p_title, @p_year, @p_description, @p_priority, @p_estimated_hours, @p_due_date)",
                 connection);
             command.Parameters.AddWithValue("@p_user_id", userId);
             command.Parameters.AddWithValue("@p_title", createStoryDto.Title);
-            command.Parameters.AddWithValue("@p_description", (object?)createStoryDto.Description ?? DBNull.Value);
             command.Parameters.AddWithValue("@p_year", createStoryDto.Year);
+            command.Parameters.AddWithValue("@p_description", (object?)createStoryDto.Description ?? DBNull.Value);
             command.Parameters.AddWithValue("@p_priority", createStoryDto.Priority);
             command.Parameters.AddWithValue("@p_estimated_hours", (object?)createStoryDto.EstimatedHours ?? DBNull.Value);
             command.Parameters.AddWithValue("@p_due_date", (object?)createStoryDto.DueDate ?? DBNull.Value);
