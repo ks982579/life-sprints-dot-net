@@ -41,6 +41,42 @@ docker exec lifesprint_postgres psql -U lifesprint_user -d lifesprint_db -c "SEL
 docker exec lifesprint_postgres psql -U lifesprint_user -d lifesprint_db -c "\dt"
 ```
 
+For TESTING!
+
+```bash
+dotnet new xunit -n LifeSprints.Tests -o tests/LifeSprints.Tests
+cd ./back/tests/LifeSprints.Tests && dotnet add reference ../../src/LifeSprints.Api/LifeSprints.Api.csproj
+dotnet add package Moq
+dotnet add package Microsoft.AspNetCore.Mvc.Testing
+dotnet add package Testcontainers.PostgreSql
+dotnet test tests/LifeSprints.Tests/LifeSprints.Tests.csproj --verbosity normal
+```
+
+✅ Test Setup Complete:
+
+- xUnit test project with proper references
+- Moq for mocking dependencies
+- TestContainers.PostgreSQL for real database testing
+- ASP.NET Core testing for integration tests
+
+✅ Test Coverage:
+
+1. StoredProcedureServiceTests - Unit tests with real PostgreSQL database
+2. StoriesControllerIntegrationTests - End-to-end API testing
+
+✅ Test Features:
+
+- Real PostgreSQL containers for isolated testing
+- Database schema/stored procedure setup per test
+- CRUD operations testing
+- Error handling validation
+- Integration testing with HTTP client
+
+```bash
+cd back
+dotnet test
+```
+
 ## Kanban Board
 
 Ironically using Kanban because I cannot dedicate consistent time each week.
@@ -48,11 +84,12 @@ Ironically using Kanban because I cannot dedicate consistent time each week.
 ### To Do
 
 - [ ] React Frontend - Design / Implement / Test / Deploy
-- [ ]
+- [ ] integration tests
 
 ### In Progress
 
-- [ ] Analysing next Steps (Testing)?
+- [ ] Adding Unit Tests
+- [ ] Analysing next Steps
 
 ### Done
 
