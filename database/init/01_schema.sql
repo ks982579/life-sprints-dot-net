@@ -16,7 +16,7 @@ CREATE TABLE users (
 CREATE TABLE stories (
   id SERIAL PRIMARY KEY,
   -- delete stories is user is deleted
-  user_id UUID NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   title VARCHAR(500) NOT NULL,
   description TEXT,
   year INTEGER NOT NULL, -- annual backlog year
@@ -25,10 +25,10 @@ CREATE TABLE stories (
   estimated_hours DECIMAL(5,2),
   actual_hours DECIMAL(5,2),
   due_date DATE,
-  completed at TIMESTAMP,
+  completed_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-)
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Indexes for Performance
 -- SELECT story WHERE user_id = 'some-uuid'

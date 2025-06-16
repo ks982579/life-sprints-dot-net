@@ -1,7 +1,7 @@
 -- Stored Procedures for Life Sprint Application
 
 -- 1. Create a new story
-CREATE OR REPLACE FUNCTION sp_create_task(
+CREATE OR REPLACE FUNCTION sp_create_story(
   p_user_id UUID,
   p_title VARCHAR(500),
   p_description TEXT DEFAULT NULL,
@@ -15,7 +15,7 @@ DECLARE
   new_story_id INTEGER;
 BEGIN
   -- Validate user exists
-  IF NOT EXISTS (SELECT 1 FROM users WHERE id = p_users_id AND is_active = true) THEN
+  IF NOT EXISTS (SELECT 1 FROM users WHERE id = p_user_id AND is_active = true) THEN
     RAISE EXCEPTION 'User with id % not found or inactive', p_user_id;
   END IF;
 
